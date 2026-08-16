@@ -1,13 +1,12 @@
 {
   "name": "dsh-vision-plugin",
   "version": "1.0.0",
-  "description": "Persistent third-party vision (multimodal) model plugin for DeepSeek Harness: registers an OpenAI-compatible vision provider + vision_analyze/vision_status/vision_test tools, with a Settings card to switch API/model/key.",
+  "description": "Persistent third-party vision (multimodal) model plugin for DeepSeek Harness: registers an OpenAI-compatible vision provider + vision_analyze/vision_status/vision_test/vision_configure tools. Host-only bundle (no settings card): endpoint/model/key are configured via the vision_configure tool or DSH_VISION_* env vars.",
   "license": "MIT",
   "type": "module",
   "main": "./lib/index.js",
   "exports": {
     ".": { "import": "./lib/index.js" },
-    "./client": { "default": "./lib/client.js" },
     "./package.json": "./package.json"
   },
   "files": [
@@ -21,16 +20,6 @@
   "dsh": {
     "bundle": {
       "patch": "./cordis.patch.yml"
-    },
-    "client": {
-      "platform": "web",
-      "inject": [
-        "@deepseek-ai/dsh-client-connection",
-        "@deepseek-ai/dsh-client-locale",
-        "@deepseek-ai/dsh-client-runtime",
-        "@deepseek-ai/dsh-client-ui-settings",
-        "@deepseek-ai/dsh-client-ui-settings-plugins"
-      ]
     }
   },
   "peerDependencies": {
@@ -40,13 +29,7 @@
     "@deepseek-ai/dsh-settings": "*",
     "@deepseek-ai/dsh-tools": "*",
     "@deepseek-ai/dsh-attachment": "*",
-    "@deepseek-ai/schemastery": "*",
-    "@deepseek-ai/dsh-client-connection": "*",
-    "@deepseek-ai/dsh-client-locale": "*",
-    "@deepseek-ai/dsh-client-runtime": "*",
-    "@deepseek-ai/dsh-client-ui-settings": "*",
-    "@deepseek-ai/dsh-client-ui-settings-plugins": "*",
-    "react": "^18.2.0"
+    "@deepseek-ai/schemastery": "*"
   },
   "peerDependenciesMeta": {
     "@deepseek-ai/cordis": { "optional": true },
@@ -55,12 +38,6 @@
     "@deepseek-ai/dsh-settings": { "optional": true },
     "@deepseek-ai/dsh-tools": { "optional": true },
     "@deepseek-ai/dsh-attachment": { "optional": true },
-    "@deepseek-ai/schemastery": { "optional": true },
-    "@deepseek-ai/dsh-client-connection": { "optional": true },
-    "@deepseek-ai/dsh-client-locale": { "optional": true },
-    "@deepseek-ai/dsh-client-runtime": { "optional": true },
-    "@deepseek-ai/dsh-client-ui-settings": { "optional": true },
-    "@deepseek-ai/dsh-client-ui-settings-plugins": { "optional": true },
-    "react": { "optional": true }
+    "@deepseek-ai/schemastery": { "optional": true }
   }
 }

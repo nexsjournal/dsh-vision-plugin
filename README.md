@@ -20,10 +20,12 @@ DSH 的主模型默认是文本模型，本身看不到图片。这个插件借�
 
 ## 原理
 
-1. **注册 provider**：host 端在 DSH 里注册一个名为 `vision` 的 LLM provider（出现在模型选择器）和三个模型工具（`vision_analyze` / `vision_status` / `vision_test`）。
+1. **注册 provider**：host 端在 DSH 里注册一个名为 `vision` 的 LLM provider（出现在模型选择器）和四个模型工具（`vision_analyze` / `vision_status` / `vision_test` / `vision_configure`）。
 2. **转发请求**：当你切到 `vision` 发图（或调用 `vision_analyze`）时，插件把当前对话转成 OpenAI 的 `/chat/completions` 请求格式（图片转成 base64 data URL），**非流式、单次**发往你配置的端点。
 3. **返回结果**：第三方多模态模型返回文字描述，插件把它作为普通模型响应 / 工具结果交回对话，主模型据此继续回答。
-4. **配置热加载**：Base URL / 模型 / API Key 三项存于 DSH **凭据服务**，配置卡片可改、**保存即生效、无需重启**。
+4. **配置热加载**：Base URL / 模型 / API Key 三项存于 DSH **凭据服务**，通过对话里的 `vision_configure` 工具或环境变量修改、**保存即生效、无需重启**。
+
+> 本插件是 **纯 host 插件**：不提供设置卡片（插件配置页不会出现它），只占用插件列表里的一行。端点配置走上面第 4 条的两条通道，DSH 本身的模型窗口也能添加同类自定义模型，二者不冲突。
 
 数据流向：
 
@@ -52,20 +54,20 @@ npx @deepseek-ai/dsh plugin --profile web add github:nexsjournal/dsh-vision-plug
 ```
 
 **完全退出并重开 DSH**。重启后：
-- 模型选择器出现 `vision`；
-- 「设置 → 插件 → 插件配置」出现「视觉识别 (dsh-vision)」卡片。
+- 「设置 → 插件 → 插件列表」出现 `vision-plugin` 一行（已启用）；
+- 对话里可用 `vision_status` / `vision_configure` / `vision_test` / `vision_analyze` 四个工具；
+- 「设置 → 插件 → 插件配置」**不会**出现本插件的卡片——本插件是纯 host 插件，端点配置走对话或环境变量（见下节）。
 
 > 桌面端与网页版共用 web profile，装到 web 即两端都生效。
-> 依赖说明：本包把 `@deepseek-ai/*` 与 `react` 声明为 optional peerDependencies，安装时不额外拉取，运行时由 profile 依赖树解析（标准部署自带）。
+> 依赖说明：本包把 `@deepseek-ai/*` 声明为 optional peerDependencies，安装时不额外拉取，运行时由 profile 依赖树解析（标准部署自带）。
 
 ## 配置（必做，约 1 分钟）
 
-要配三项：**Base URL**（OpenAI 兼容端点，以 `/v1` 结尾）、**模型**（该端点能处理图片的模型 id）、**API Key**（端点密钥）。三种配法任选其一，都**热生效、无需重启**：
+要配三项：**Base URL**（OpenAI 兼容端点，以 `/v1` 结尾）、**模型**（该端点能处理图片的模型 id）、**API Key**（端点密钥）。两种配法任选其一，都**热生效、无需重启**：
 
-- **① 配置卡片（推荐）**：「设置 → 插件 → 插件配置」→「视觉识别 (dsh-vision)」，填三项、点保存。每项徽标变"已配置"，卡片头变"已就绪"。API Key 单向存凭据，界面不读回明文。
-- **② 对话里让助手配（卡片没出现时用这个）**：直接对助手说"把视觉端点配成 baseURL=`https://你的域名/v1`、模型=`xxx`、key=`sk-xxx`"，助手会调 `vision_configure` 工具写入凭据。
-  > 注意：这样 API Key 会出现在对话里并写入凭据库；个人/本地 DSH 没问题，**共享部署建议用③环境变量**存 Key。
-- **③ 环境变量**：在 DSH 进程环境设 `DSH_VISION_BASE_URL` / `DSH_VISION_MODEL` / `DSH_VISION_API_KEY`（launchd 服务写进 plist 的 `EnvironmentVariables` 或启动脚本）。凭据未设置时生效。
+- **① 对话里让助手配（推荐）**：直接对助手说"把视觉端点配成 baseURL=`https://你的域名/v1`、模型=`xxx`、key=`sk-xxx`"，助手会调 `vision_configure` 工具写入凭据。
+  > 注意：这样 API Key 会出现在对话里并写入凭据库；个人/本地 DSH 没问题，**共享部署建议用②环境变量**存 Key。
+- **② 环境变量**：在 DSH 进程环境设 `DSH_VISION_BASE_URL` / `DSH_VISION_MODEL` / `DSH_VISION_API_KEY`（launchd 服务写进 plist 的 `EnvironmentVariables` 或启动脚本）。凭据未设置时生效。
 
 通用规则：
 - **热生效**：改完立即生效，无需重启（只有装/卸载插件才要重启）。
@@ -87,11 +89,11 @@ npx @deepseek-ai/dsh plugin --profile web add github:nexsjournal/dsh-vision-plug
 
 | 现象 | 处理 |
 | --- | --- |
-| `vision_test` 报"API Key 未配置" | 卡片填 Key 保存 / 对话里 `vision_configure` / 设环境变量 `DSH_VISION_API_KEY` |
+| `vision_test` 报"API Key 未配置" | 对话里让助手 `vision_configure` / 设环境变量 `DSH_VISION_API_KEY` |
 | `vision_test` 报连接失败（HTTP 401/403） | Key 错误，或该 Key 无此模型权限 |
 | `vision_test` 报模型不在列表 | 填的模型 id 不在端点 `/models` 返回里，核对拼写 |
-| **插件配置里看不到「视觉识别」卡片** | 不影响使用——改用②对话里 `vision_configure` 或③环境变量配端点。卡片是客户端插件，个别部署（如 launchd 服务、profile 不一致）可能不加载，先用 `vision_status` 确认 host 侧工具在不在 |
-| **模型选择器里没有 `vision`** | `vision` 只在端点配好后才出现（没配 model 时不显示空模型）。先配端点（三种方式任一），再看选择器 |
+| **插件配置里没有本插件的卡片** | 正常——本插件是纯 host 插件，**不提供卡片**。端点配置走①对话里 `vision_configure` 或②环境变量；先用 `vision_status` 确认 host 侧工具在不在 |
+| **模型选择器里没有 `vision`** | `vision` 只在端点配好后才出现（没配 model 时不显示空模型）。先配端点（两种方式任一），再看选择器 |
 | 切到 vision 后发图没反应 | 确认三项都"已配置"（`vision_status` 的 `ready: true`）；Base URL 必须以 `/v1` 结尾 |
 | 没切模型、发图也没识别 | 当前主模型若在 DSH 里声明了 image，DSH 会直通主模型、本插件不介入；没声明 image 时用 `vision_analyze`（方式 B，不切模型） |
 
@@ -105,11 +107,10 @@ npx @deepseek-ai/dsh plugin --profile web add github:nexsjournal/dsh-vision-plug
 
 ```
 dsh-vision-plugin/
-├── package.json          # dsh.bundle 元数据 + dsh.client.inject + optional peers
+├── package.json          # dsh.bundle 元数据（纯 host，无 dsh.client）+ optional peers
 ├── cordis.patch.yml      # 组合补丁：插入 dsh-vision-plugin 行
 ├── lib/
-│   ├── index.js          # Host 半：注册 vision provider + 三个工具 + 凭据配置解析
-│   └── client.js         # Client 半：配置卡片（__ModuleLoader__ 格式）
+│   └── index.js          # Host 半：注册 vision provider + 四个工具 + 凭据配置解析
 ├── README.md
 └── LICENSE
 ```
