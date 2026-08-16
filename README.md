@@ -1,3 +1,5 @@
+![dsh-vision-plugin](docs/banner.png)
+
 # dsh-vision-plugin
 
 **给 DSH 的模型目录补上「图片输入」声明勾选框——勾一下，自定义模型就能在对话框里直接收图。**
