@@ -16,9 +16,18 @@ DeepSeek Harness（DSH）的**持久化**第三方视觉模型插件。让文本
 | 切到本插件的 `vision` provider | 图片经你配置的 OpenAI 兼容端点 `/chat/completions`（非流式单次请求）识别 |
 | 用 `vision_analyze` 工具 | 把图片文件 / data URL 交给视觉模型，返回详细文字描述（OCR、布局、代码逐行、图表） |
 
-配置分两部分：
-- **非敏感字段**（baseURL / model / providerId / contextWindow / maxTokens 等）存于 DSH 设置命名空间 `dsh-vision`，卡片改动热加载。
-- **API Key** 通过 DSH **凭据服务**按命名引用（默认 `DSH_VISION_API_KEY`）单向保存，界面只显示"是否已配置"，不会读回明文；也可用同名环境变量回退。
+配置通过 DSH **凭据服务**按命名引用保存，配置卡片可热改（保存即生效、无需重启）：
+
+| 项 | 凭据名 | 说明 |
+| --- | --- | --- |
+| Base URL | `DSH_VISION_BASE_URL` | OpenAI 兼容端点（以 `/v1` 结尾） |
+| 模型 | `DSH_VISION_MODEL` | 该端点支持图片的模型 id |
+| API Key | `DSH_VISION_API_KEY` | 端点的密钥 |
+
+- 三项均**单向保存**，界面只显示"已配置 / 未配置"，不会读回明文；留空即不修改。
+- 每项也可用**同名环境变量**回退（如 `DSH_VISION_BASE_URL`），便于无界面场景。
+- 高级项（`providerId` / `displayName` / `contextWindow` / `maxTokens` / `enabled`）走 cordis.yml 里本插件行的 `config`（很少改，改动需重启）。
+- 本插件是 **BYO（自带端点）**：每个用户配置自己的端点与 Key，仓库不内置任何具体地址或密钥，也不共享他人配置。
 
 ## 安装
 
@@ -35,7 +44,8 @@ npx @deepseek-ai/dsh plugin --profile web add github:<你的用户名>/dsh-visio
 
 ## 使用
 
-1. **配置**：设置 → 插件 → 插件配置 → 「视觉识别 (dsh-vision)」，填写你的 **Base URL / 模型 / API Key**，保存。
+1. **配置**：设置 → 插件 → 插件配置 → 「视觉识别 (dsh-vision)」，填写 **Base URL / 模型 / API Key**，点保存（热生效，无需重启）。
+   - 每项旁有"已配置 / 未配置"徽标；留空表示不修改该项。三项齐全后卡片头显示"已就绪"。
    - Base URL 指向任意 OpenAI 兼容端点（以 `/v1` 结尾），模型填该端点支持的、能处理图片的模型 id。
 2. **验证**：在对话里让助手执行 `vision_test`（校验 Key + 可达性 + 模型是否在端点列表）。
 3. **用图**：
@@ -49,8 +59,8 @@ dsh-vision-plugin/
 ├── package.json          # dsh.bundle 元数据 + dsh.client.inject + optional peers
 ├── cordis.patch.yml      # 组合补丁：插入 dsh-vision-plugin 行
 ├── lib/
-│   ├── index.js          # Host 半：注册 vision provider + 三个工具 + 设置命名空间
-│   └── client.js         # Client 半：设置卡片（__ModuleLoader__ 格式）
+│   ├── index.js          # Host 半：注册 vision provider + 三个工具 + 凭据配置解析
+│   └── client.js         # Client 半：配置卡片（__ModuleLoader__ 格式）
 ├── README.md
 └── LICENSE
 ```
