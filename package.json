@@ -1,7 +1,7 @@
 {
   "name": "dsh-vision-plugin",
-  "version": "1.0.0",
-  "description": "Persistent third-party vision (multimodal) model plugin for DeepSeek Harness: registers an OpenAI-compatible vision provider + vision_analyze/vision_status/vision_test/vision_configure tools. Host-only bundle (no settings card): endpoint/model/key are configured via the vision_configure tool or DSH_VISION_* env vars.",
+  "version": "1.1.0",
+  "description": "DeepSeek Harness plugin: (1) installs an image-input (input modalities) checkbox into the Models settings catalog so a custom model can declare input:[text,image] and DSH passes images straight to it — the core feature; (2) optionally registers an OpenAI-compatible vision relay provider + vision_analyze/vision_status/vision_test/vision_configure tools. Host-only bundle (no settings card).",
   "license": "MIT",
   "type": "module",
   "main": "./lib/index.js",
